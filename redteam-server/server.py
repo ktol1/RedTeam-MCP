@@ -1,11 +1,29 @@
 import asyncio
 import shlex
 import subprocess
+import re
 from mcp.server.fastmcp import FastMCP
 
 # 初始化 RedTeam MCP 服务器
 # 使用 mcp 官方提供的 FastMCP 快速构建工具库
 mcp = FastMCP("RedTeam-Server")
+
+def optimize_output(text: str, limit: int = 8000) -> str:
+    """
+    清洗并截断工具输出，剥离 ANSI 颜色乱码以极大节省 Token 消耗，
+    并防止超长输出导致大模型上下文遗忘或崩溃。
+    """
+    if not text:
+        return ""
+    # 清除终端 ANSI 颜色代码（颜色乱码极其消耗大模型 Token）
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    text = ansi_escape.sub('', text)
+    # 压缩连续空行
+    text = re.sub(r'\n\s*\n', '\n', text)
+    
+    if len(text) > limit:
+        return text[:limit] + f"\n\n...[⚠️ 输出过长已被系统截断。当前展示前 {limit} 字符以节省 Token 消耗。如需更多详情，请要求 AI 缩小探测范围（如使用更具体的网段、端口或字典）]..."
+    return text
 
 async def run_command_with_timeout(command: list[str], timeout: int = 120) -> str:
     """
@@ -26,11 +44,14 @@ async def run_command_with_timeout(command: list[str], timeout: int = 120) -> st
         output = stdout.decode('utf-8', errors='ignore')
         err_output = stderr.decode('utf-8', errors='ignore')
         
+        combined_output = output if output else err_output
+        optimized_result = optimize_output(combined_output)
+        
         # 即使进程返回非 0 状态码 (常常发生于漏洞探测工具)，也必须返回它的输出，让 AI 能看到真实情况
         if process.returncode != 0:
-            return f"命令执行结束 (退出码 {process.returncode})。\n标准错误:\n{err_output}\n标准输出:\n{output}"
+            return f"命令执行结束 (退出码 {process.returncode})。\n返回内容:\n{optimized_result}"
         
-        return output if output else err_output
+        return optimized_result
         
     except asyncio.TimeoutError:
         # 超时时必须杀掉进程
@@ -42,52 +63,6 @@ async def run_command_with_timeout(command: list[str], timeout: int = 120) -> st
         return f"执行失败: 权限被拒绝，如果你使用的是快捷方式（.lnk），请检查快捷方式的指向或以管理员权限运行。"
     except Exception as e:
         return f"执行失败: 发生未知异常: {str(e)}"
-
-@mcp.tool()
-async def invoke_native_port_scan(target: str, ports: str = "21,22,23,25,53,80,110,135,139,443,445,1433,1521,3306,3389,6379,8080,8443") -> str:
-    """
-    基于 Python 完全原生实现的高并发短平快端口扫描与服务探测。
-    彻底取代 Nmap。无需系统底层网卡支持，无需安装任何额外程序或驱动。
-    适用场景：当你想要快速确认某个 IP 开不开指定的核心服务端口(如 3389, 445 等)并拉取 Banner 时使用。
-    
-    :param target: 目标 IP (例如 '192.168.1.1')。不要填网段。
-    :param ports: 逗号分隔的端口号 (默认包含最常见的高危红队入场端口)。
-    """
-    port_list = [int(p.strip()) for p in ports.split(",") if p.strip().isdigit()]
-    
-    async def _check_port(port):
-        try:
-            # 建立探针连接，2秒超时
-            reader, writer = await asyncio.wait_for(
-                asyncio.open_connection(target, port), timeout=2.0
-            ) 
-            banner = ""
-            try:
-                # 尝试抓取 Banner 1秒钟
-                data = await asyncio.wait_for(reader.read(256), timeout=1.0)
-                if data:
-                    banner = data.decode('utf-8', errors='ignore').strip().replace('\n', ' ')
-            except:
-                pass
-            writer.close()
-            await writer.wait_closed()
-            return port, "Open", banner
-        except (asyncio.TimeoutError, ConnectionRefusedError, OSError):
-            return port, "Closed", ""
-            
-    tasks = [_check_port(p) for p in port_list]
-    scan_results = await asyncio.gather(*tasks)
-
-    output = [f"=== 原生协议探针扫描: {target} ==="]
-    open_count = 0
-    for port, state, banner in scan_results:
-        if state == "Open":
-            open_count += 1
-            output.append(f"[+] 端口 {port:<5} 开发 \t| Banner回显: {banner if banner else '无回显(可能是HTTP/空)'}")
-            
-    if open_count == 0:
-        output.append("[-] 未发现开放的目标端口。")
-    return "\n".join(output)
 
 @mcp.tool()
 async def invoke_nxc(protocol: str, target: str, args: str = "") -> str:

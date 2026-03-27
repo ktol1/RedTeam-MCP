@@ -1,0 +1,3 @@
+$oldoffice$1*ba6db9623c02dbfb91357d8a09e48558*0b63cb642d13141f479963289c63a203*d68bf8de27e24741ede7ad3b6c8eb2d9
+
+hashcat -m 9700 -a 3 hash.txt -1 ?d?l ?1?1?1?1?1?1?1?1 -w 3 --self-test-disable

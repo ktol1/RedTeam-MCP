@@ -42,13 +42,6 @@ description: RedTeam penetration testing agent skill. Use this for network scann
   # 单目标常见端口快扫
   gogo -i 10.10.26.107 -p top2,win,db -v
 
-  # 网段 smart 模式扫描，安静，自动存文件
-  gogo -i 192.168.1.0/24 -m s -p top2,win,db --af -q
-
-  # 超大网段 supersmart
-  gogo -i 10.0.0.0/8 -m ss -p top2,win,db --af -q
-
-
 ---
 
 ##  工具二：fscan (内网综合大杀器)
@@ -395,57 +388,4 @@ description: RedTeam penetration testing agent skill. Use this for network scann
 
 ---
 
-##  工具八：Playwright (无头浏览器动态页面信息读取)
-
-> Playwright 通过 pip 安装，并需运行 `playwright install chromium` 下载浏览器引擎。
-> install_tools.py / install_tools_linux.py 已自动处理。
-
-**与 httpx 的区别**：
-- httpx 只获取原始 HTTP 响应（不执行 JavaScript）
-- Playwright 会真正启动 Chromium 浏览器，执行 JS、渲染 DOM、保留 Cookies / LocalStorage
-- 适用于 SPA 单页应用、动态加载页面、登录表单发现、Cookie/Token 提取
-
-**MCP Tool**: `invoke_playwright_browse`
-
-**参数**：
-
-| 参数 | 说明 |
-|------|------|
-| `url` | 目标 URL（必填） |
-| `action` | 操作类型：`info`(综合信息) / `content`(纯文本) / `html`(完整HTML) / `screenshot`(截图) / `js`(执行JS) |
-| `js_code` | action=js 时要执行的 JavaScript 代码 |
-| `wait_time` | 页面加载后额外等待秒数（默认 5），用于等待 JS 渲染 |
-| `screenshot_path` | 截图保存路径（截图模式时用） |
-
-**action 详解**：
-
-- `info`（默认）：返回页面标题、最终URL、所有Cookies、表单列表、链接列表（前50）、Meta标签、外部脚本引用
-- `content`：返回 JS 渲染后的页面纯文本（截断 50000 字符）
-- `html`：返回完整 DOM HTML 源码（截断 50000 字符）
-- `screenshot`：全页截图保存为 PNG
-- `js`：在页面上下文执行自定义 JavaScript 并返回结果
-
-**实战指令**：
-
-  # 获取目标页面综合信息（标题、Cookie、表单、链接等）
-  invoke_playwright_browse url="http://10.10.26.107:8080" action="info"
-
-  # 读取 SPA 应用渲染后的文本内容
-  invoke_playwright_browse url="https://target.com/admin" action="content" wait_time=8
-
-  # 提取页面上的 Cookie 和 LocalStorage
-  invoke_playwright_browse url="http://10.10.26.107" action="js" js_code="JSON.stringify({cookies: document.cookie, localStorage: Object.entries(localStorage)})"
-
-  # 发现隐藏的 API 端点（从 JS 源码中提取）
-  invoke_playwright_browse url="https://target.com" action="js" js_code="JSON.stringify(performance.getEntriesByType('resource').filter(r => r.initiatorType === 'xmlhttprequest' || r.initiatorType === 'fetch').map(r => r.name))"
-
-  # 截图保存为证据
-  invoke_playwright_browse url="http://10.10.26.107:8080/admin" action="screenshot" screenshot_path="evidence_admin_panel.png"
-
-  # 获取页面完整 HTML 源码
-  invoke_playwright_browse url="http://target.com" action="html"
-
- 注意：
-- Playwright 启动浏览器耗时较长，快速信息探测优先用 httpx，需要 JS 渲染内容时再用 Playwright。
-- wait_time 参数对 SPA 应用很重要，确保异步加载完成。
-- 截图功能可用于渗透测试报告的可视化证据。
+### nc chisel 

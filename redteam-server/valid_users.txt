@@ -1,0 +1,6 @@
+2026/03/03 11:50:43 >  Using KDC(s):
+2026/03/03 11:50:43 >  	10.129.8.87:88
+2026/03/03 11:50:44 >  [+] VALID USERNAME:	 administrator@pirate.htb
+2026/03/03 11:50:45 >  [+] VALID USERNAME:	 j.sparrow@pirate.htb
+2026/03/03 11:50:45 >  [+] VALID USERNAME:	 dc01@pirate.htb
+2026/03/03 11:50:46 >  Done! Tested 61 usernames (3 valid) in 2.184 seconds

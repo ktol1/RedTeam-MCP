@@ -18,6 +18,17 @@ TOOLS_LIST = {
     "nxc": "Pennyw0rth/NetExec"
 }
 
+# 需下载的其他二进制工具（特殊处理）
+EXTRA_TOOLS = {
+    "SharpHound": {
+        "repo": "BloodHoundAD/SharpHound",
+        "version": "v2.3.2",
+        "zip_name": "SharpHound-v2.3.2.zip",
+        "exe_name": "SharpHound.exe",
+        "target_path": os.path.join(TOOLS_DIR, "SharpHound.exe")
+    }
+}
+
 def download_and_extract_latest(repo, tool_name):
     print(f"\n[*] 正在准备安装 {tool_name} (来自 {repo})...")
     
@@ -94,6 +105,9 @@ PYTHON_PACKAGES = [
     "bloodhound",         # bloodhound-python：AD 权限图谱收集
     "netexec",            # nxc：内网横向渗透控制台（pip 版，补充 exe 版）
     "playwright",         # Playwright 无头浏览器：动态页面信息读取
+    "pywerview",          # PowerView.py：域用户/计算机/组枚举
+    "ldapdomaindump",     # LDAP 域信息转储
+    "responder",          # LLMNR/NBT-NS/mDNS 欺骗器
 ]
 
 def install_python_packages():
@@ -124,6 +138,39 @@ def install_python_packages():
     else:
         print("[~] impacket 入口点不在 PATH，将使用 python -m impacket.examples.* 调用")
 
+    # 验证 pywerview (PowerView)
+    print("\n[*] 验证 pywerview...")
+    result = subprocess.run(
+        [sys.executable, "-c", "import pywerview; print('pywerview OK')"],
+        capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        print("[+] pywerview 可用")
+    else:
+        print("[!] pywerview 安装失败")
+
+    # 验证 ldapdomaindump
+    print("\n[*] 验证 ldapdomaindump...")
+    result = subprocess.run(
+        [sys.executable, "-c", "import ldapdomaindump; print('ldapdomaindump OK')"],
+        capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        print("[+] ldapdomaindump 可用")
+    else:
+        print("[!] ldapdomaindump 安装失败")
+
+    # 验证 responder
+    print("\n[*] 验证 responder...")
+    result = subprocess.run(
+        [sys.executable, "-c", "import responder; print('responder OK')"],
+        capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        print("[+] responder 可用")
+    else:
+        print("[!] responder 安装失败")
+
     # 安装 Playwright 浏览器引擎
     print("\n[*] 安装 Playwright Chromium 浏览器引擎...")
     result = subprocess.run(
@@ -136,18 +183,74 @@ def install_python_packages():
         print(f"[!] Playwright 浏览器安装失败:\n{result.stderr.strip()}")
 
 
+def download_extra_tools():
+    """下载需要特殊处理的工具（如 SharpHound）"""
+    import urllib.request
+
+    for tool_name, tool_info in EXTRA_TOOLS.items():
+        print(f"\n[*] 正在安装 {tool_name}...")
+
+        target_path = tool_info["target_path"]
+        if os.path.exists(target_path):
+            print(f"[+] {tool_name} 已存在，跳过下载")
+            continue
+
+        api_url = f'https://api.github.com/repos/{tool_info["repo"]}/releases/tags/{tool_info["version"]}'
+        try:
+            req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as response:
+                data = json.loads(response.read().decode())
+
+            download_url = None
+            for asset in data.get('assets', []):
+                name = asset['name'].lower()
+                if 'sharphound' in name and name.endswith('.zip'):
+                    download_url = asset['browser_download_url']
+                    break
+
+            if not download_url:
+                print(f"[!] 未找到 {tool_name} 发布文件")
+                continue
+
+            zip_path = os.path.join(TOOLS_DIR, tool_info["zip_name"])
+            print(f"[-] 下载: {download_url}")
+            req = urllib.request.Request(download_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as response, open(zip_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+
+            # 解压
+            print(f"[-] 解压到 {TOOLS_DIR}")
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                for member in zip_ref.namelist():
+                    if member.endswith('.exe'):
+                        zip_ref.extract(member, TOOLS_DIR)
+                        extracted_exe = os.path.join(TOOLS_DIR, member)
+                        if extracted_exe != target_path:
+                            if os.path.exists(target_path):
+                                os.remove(target_path)
+                            os.rename(extracted_exe, target_path)
+                        break
+
+            os.remove(zip_path)
+            print(f"[+] {tool_name} 安装成功！")
+
+        except Exception as e:
+            print(f"[!] {tool_name} 安装失败: {e}")
+
+
 if __name__ == "__main__":
     if not os.path.exists(TOOLS_DIR):
         print(f"[*] 创建工具统一存放目录: {TOOLS_DIR}")
         os.makedirs(TOOLS_DIR)
-        
+
     print("="*50)
     print("RedTeam-MCP 依赖工具自动化部署脚本")
     print("="*50)
-    
+
     for tool_name, repo in TOOLS_LIST.items():
         download_and_extract_latest(repo, tool_name)
 
+    download_extra_tools()
     install_python_packages()
 
     print("\n" + "="*50)

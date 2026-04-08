@@ -7,9 +7,29 @@ import sys
 import base64
 from mcp.server.fastmcp import FastMCP
 
-# 初始化 RedTeam MCP 服务器
+# ==============================================================================
+#  RedTeam MCP 服务器
+# ==============================================================================
 # 使用 mcp 官方提供的 FastMCP 快速构建工具库
 mcp = FastMCP("RedTeam-Server")
+
+# ==============================================================================
+#  ⚠️ Windows 用户注意事项 ⚠️
+# ==============================================================================
+# 如果执行 impacket 工具时提示找不到命令，请选择以下方案之一：
+#
+# 方案 1：将 impacket 安装目录添加到系统 PATH 环境变量
+#   - impacket 默认安装在: <Python安装目录>\Scripts\
+#   - 查找方法: 在 PowerShell 中运行: (python -c "import impacket; print(impacket.__file__)")
+#   - 将该目录添加到 PATH 后重启终端
+#
+# 方案 2：使用 python -m 方式调用
+#   - 例如: python -m impacket.examples.wmiexec ...
+#   - 不依赖 PATH 配置
+#
+# 方案 3：配置本 MCP 服务器的工具路径
+#   - 修改 invoke_impacket_* 函数的 command 列表，使用完整路径或 python -m 前缀
+# ==============================================================================
 
 def optimize_output(text: str, limit: int = 8000) -> str:
     """

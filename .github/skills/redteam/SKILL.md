@@ -249,6 +249,11 @@ description: RedTeam penetration testing agent skill. Use this for network scann
 > **Impacket / nxc / bloodhound-python 已由 install_tools.py 统一安装。**
 > Agent 直接按以下规则调用，无需验证安装状态。
 >
+> **Windows 用户注意事项**：
+> - 如果 `impacket-*` 命令无法识别，请将 impacket 安装目录添加到系统 PATH
+> - 或者使用 `python -m impacket.examples.<工具名>` 方式调用
+> - impacket 默认安装在 Python 目录的 `Scripts` 文件夹中
+>
 > **Impacket Windows 调用规则**（优先级）：
 > 1. `impacket-<工具名>` 入口点（推荐）： `impacket-wmiexec`
 > 2. fallback：`python -m impacket.examples.<工具名>`

@@ -1,6 +1,6 @@
 ---
 name: redteam
-description: RedTeam physical terminal execution skill. ONLY run using run_in_terminal, NOT MCP. Use for network scan, lateral movement, etc.
+description: RedTeam physical terminal execution skill. ONLY run using run_in_terminal. Use for network scan, lateral movement, etc.
 ---
 
 #  AI 执行的底层通用指导原则
@@ -246,7 +246,7 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 
 ##  Python 系域渗透工具包 (nxc / Impacket)
 
-> **Impacket / nxc / bloodhound-python 已由 install_tools.py 统一安装。**
+> **Impacket / nxc / bloodhound-python 已由 scripts/install_tools.py 统一安装。**
 > Agent 直接按以下规则调用，无需验证安装状态。
 >
 > **Windows 用户注意事项**：
@@ -1051,7 +1051,7 @@ run python -m impacket.examples...
 
 ## 工具九：BloodHound 数据分析 (AD 权限图谱分析器)
 
-**脚本路径**: d:\mcp\redteam-server\bloodhound_analysis.py
+**脚本路径**: .\scripts\bloodhound_analysis.py
 
 > SharpHound/bloodhound-python 只负责收集数据，此工具负责分析数据、生成攻击路径报告。
 > AI 可以直接调用此工具，获得类似 BloodHound GUI 的分析结果！
@@ -1108,7 +1108,7 @@ run python -m impacket.examples...
 
 ## 工具十：代理自动化搭建 (Proxy Setup)
 
-**脚本路径**: d:\mcp\redteam-server\proxy_setup.py
+**脚本路径**: .\scripts\proxy_setup.py
 
 > 在获得内网主机权限后，需要搭建代理访问其他网段时使用。AI 会自动生成上传命令和执行指令！
 

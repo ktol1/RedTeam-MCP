@@ -1,16 +1,23 @@
-# Repository Instructions
+﻿# Repository Instructions
 
 This repository uses Skill-first terminal workflows.
 
 ## Preferred execution model
 
-- Do not use MCP tool wrappers from `redteam-server/server.py`.
-- Prefer direct terminal execution of binaries in `d:\mcp\redteam-tools`.
+- Do not use wrapper scripts; execute tools directly in terminal.
+- Prefer direct terminal execution of binaries in `.\redteam-tools`.
 - Load and follow the `redteam` skill before launching red-team commands.
+
+## Terminal execution contract
+
+- Execute commands directly in terminal and read output from terminal/files.
+- For long or noisy scans, redirect output to files first, then extract key lines.
+- Prefer non-interactive arguments so commands can complete unattended.
+- For long-running listeners, run in background mode and check output incrementally.
 
 ## Tool location
 
-- Primary directory: `d:\mcp\redteam-tools`
+- Primary directory: `.\redteam-tools`
 - Use absolute paths when command resolution fails.
 
 ## Output discipline
@@ -21,4 +28,5 @@ This repository uses Skill-first terminal workflows.
 ## Safety and reliability
 
 - Use non-interactive command forms.
-- If arguments are uncertain, read local help files in `d:\mcp\redteam-tools\*_help.txt` before retrying.
+- If arguments are uncertain, read local help files in `.\redteam-tools\*_help.txt` before retrying.
+

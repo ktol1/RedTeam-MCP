@@ -4,7 +4,8 @@ import json
 import zipfile
 import shutil
 
-TOOLS_DIR = r"d:\mcp\redteam-tools"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+TOOLS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "redteam-tools")
 
 # 需下载的 Go 语言编写的核心工具列表与仓库
 TOOLS_LIST = {

@@ -29,7 +29,8 @@ class ProxyConfig:
 class ProxySetup:
     """代理搭建工具"""
 
-    TOOLS_DIR = r"d:\mcp\redteam-tools"
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    TOOLS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "redteam-tools")
 
     def __init__(self):
         self.tools = {

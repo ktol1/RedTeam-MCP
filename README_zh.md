@@ -99,7 +99,7 @@ Windows 10/11 或 Linux/macOS
 ```bash
 # 克隆仓库
 git clone https://github.com/ktol1/RedTeam-Agent.git
-cd RedTeam-Agent/redteam-server
+cd RedTeam-Agent
 
 # 创建虚拟环境
 python -m venv venv
@@ -110,50 +110,31 @@ python -m venv venv
 # Linux/macOS
 source venv/bin/activate
 
-# 安装依赖
-pip install -r requirements.txt
-
 # 下载二进制工具 (自动下载 gogo, fscan, httpx, nuclei 等)
-python install_tools.py
+python scripts/install_tools.py
 ```
 
-### 3️⃣ 配置 MCP
+### 3️⃣ 启用 Skills 终端模式
 
-#### Cursor IDE
+无需额外服务端配置。只需要：
 
-打开 `设置` → `Features` → `MCP Servers` → `Add New Server`
+```bash
+# 进入仓库根目录（确保 .github/skills/redteam/SKILL.md 可见）
+cd RedTeam-Agent
 
-```json
-{
-  "mcpServers": {
-    "RedTeam-Agent": {
-      "command": "D:\\RedTeam-Agent\\redteam-server\\venv\\Scripts\\python.exe",
-      "args": ["D:\\RedTeam-Agent\\redteam-server\\server.py"]
-    }
-  }
-}
+# 确认工具目录存在
+dir .\redteam-tools
 ```
 
-#### Claude Desktop
-
-编辑 `%APPDATA%\Claude\claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "RedTeam-Agent": {
-      "command": "D:\\RedTeam-Agent\\redteam-server\\venv\\Scripts\\python.exe",
-      "args": ["D:\\RedTeam-Agent\\redteam-server\\server.py"]
-    }
-  }
-}
-```
+AI 会根据仓库内的 Skill 与 `copilot-instructions.md`，直接在终端执行命令并读取输出。
 
 ### 4️⃣ 开始使用
 
 对 AI 说：
 
 ```
+🎯 先加载 redteam skill，然后用终端扫描 192.168.1.0/24，输出写入 scan.txt 并总结高价值结果
+
 🎯 扫描 192.168.1.0/24 网段，发现所有 Windows 主机并识别开放服务
 
 🎯 使用 SharpHound 收集 corp.local 域信息，分析攻击路径
@@ -165,7 +146,7 @@ python install_tools.py
 
 ---
 
-## 📊 系统架构
+## 📊 系统架构（Skills + Terminal）
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -177,7 +158,7 @@ python install_tools.py
 │    ██║     ██║  ██║███████║██║ ╚═╝ ██║███████╗╚██████╔╝██╗    │
 │    ╚═╝     ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝ ╚═════╝ ╚═╝    │
 │                                                                 │
-│                    Model Context Protocol                        │
+│                 Skill-first Terminal Execution                   │
 │                                                                 │
 └─────────────────────────────┬───────────────────────────────────┘
                               │
@@ -194,16 +175,14 @@ python install_tools.py
               ┌───────────────┴───────────────┐
               │                               │
               ▼                               ▼
-    ┌─────────────────────┐       ┌─────────────────────┐
-    │   MCP Server (Python)│       │   MCP Server (Node)│
-    │                     │       │                     │
-    │  ┌───────────────┐  │       │  ┌───────────────┐  │
-    │  │   server.py   │  │       │  │ @playwright/mcp│  │
-    │  │               │  │       │  │               │  │
-    │  │ 17+ Tools     │  │       │  │ Browser       │  │
-    │  │ Output Opt    │  │       │  │ Automation    │  │
-    │  └───────────────┘  │       │  └───────────────┘  │
-    └─────────────────────┘       └─────────────────────┘
+    ┌─────────────────────────────────────────────────────────────┐
+    │                    Skill Layer                              │
+    │                                                             │
+    │  .github/copilot-instructions.md                            │
+    │  .github/skills/redteam/SKILL.md                            │
+    │                                                             │
+    │  约束: 非交互命令 / 长输出写文件 / 只提取高价值结果          │
+    └─────────────────────────────────────────────────────────────┘
               │
               ▼
     ┌─────────────────────────────────────────────────────────────┐
@@ -252,27 +231,25 @@ python install_tools.py
 
 ---
 
-## 📦 MCP 工具清单
+## 📦 终端命令清单（Skill 调用）
 
 | # | 工具名称 | 功能 | 核心命令 |
 |---|---------|------|---------|
-| 1 | `invoke_gogo` | 极速资产探针 | `gogo -t 100 -iL hosts.txt` |
-| 2 | `invoke_fscan` | 内网综合扫描 | `fscan -hf hosts.txt` |
-| 3 | `invoke_httpx` | Web 指纹探测 | `httpx -l urls.txt -title` |
-| 4 | `invoke_nuclei` | 漏洞 POC 扫描 | `nuclei -l urls.txt -t vulnerabilities/` |
-| 5 | `invoke_ffuf` | 目录 fuzzing | `ffuf -w wordlist.txt -u URL/FUZZ` |
-| 6 | `invoke_nxc` | 内网横向渗透 | `nxc smb 192.168.1.0/24 -u user -p pass` |
-| 7 | `invoke_kerbrute` | Kerberos 用户枚举 | `kerbrute userenum -d domain users.txt` |
-| 8 | `invoke_bloodhound_analysis` | BloodHound 分析 | 解析 JSON 生成攻击报告 |
-| 9 | `invoke_powerview` | 域信息枚举 | `pywerview get-domain-user` |
-| 10 | `invoke_ldapdomaindump` | LDAP 信息转储 | `ldapdomaindump ldap://dc` |
-| 11 | `invoke_responder` | LLMNR 欺骗 | `responder -I eth0` |
-| 12 | `invoke_proxy_setup` | 代理自动化搭建 | chisel/nc/powershell |
-| 13 | `invoke_playwright` | 浏览器自动化 | 截图/表单/爬取 |
-| 14 | `invoke_wmiexec` | WMI 执行 | impacket-wmiexec |
-| 15 | `invoke_psexec` | PSEXEC | impacket-psexec |
-| 16 | `invoke_secretsdump` | LSASS Dump | impacket-secretsdump |
-| 17 | `invoke_ntlmrelayx` | NTLM Relay | impacket-ntlmrelayx |
+| 1 | `gogo` | 极速资产探针 | `gogo -t 100 -l hosts.txt -q -f gogo.txt` |
+| 2 | `fscan` | 内网综合扫描 | `fscan -h 192.168.1.0/24 -np -silent -nocolor -o fscan.txt` |
+| 3 | `httpx` | Web 指纹探测 | `httpx -l urls.txt -sc -title -server -td -silent -o httpx.txt` |
+| 4 | `nuclei` | 漏洞 POC 扫描 | `nuclei -l urls.txt -tags cve,rce -s high,critical -nc -o nuclei.txt` |
+| 5 | `ffuf` | 目录 fuzzing | `ffuf -u http://target/FUZZ -w wordlist.txt -mc 200,301,302 -s -o ffuf.txt` |
+| 6 | `nxc` | 内网横向渗透 | `nxc smb 192.168.1.0/24 -u user -p pass --shares` |
+| 7 | `kerbrute` | Kerberos 用户枚举 | `kerbrute userenum -d corp.local --dc 192.168.1.10 users.txt -o valid_users.txt` |
+| 8 | `SharpHound` | BloodHound 数据采集 | `SharpHound.exe -c Default -d corp.local` |
+| 9 | `pywerview` | 域信息枚举 | `pywerview.py get-domain-user -d corp.local --dc-ip 192.168.1.10 -u user -p pass` |
+| 10 | `ldapdomaindump` | LDAP 信息转储 | `ldapdomaindump ldap://192.168.1.10 -u 'corp\\user' -p 'password' -o .\\ldapdump` |
+| 11 | `responder` | LLMNR 欺骗 | `responder -I eth0 -v` |
+| 12 | `wmiexec` | WMI 执行 | `impacket-wmiexec domain/user:pass@target 'whoami'` |
+| 13 | `psexec` | PSEXEC | `impacket-psexec domain/user:pass@target cmd.exe` |
+| 14 | `secretsdump` | LSASS Dump | `impacket-secretsdump corp.local/user:pass@dc -just-dc` |
+| 15 | `ntlmrelayx` | NTLM Relay | `impacket-ntlmrelayx -t ldap://dc --smb2support` |
 
 ---
 
@@ -293,7 +270,7 @@ python install_tools.py
 | 文档 | 说明 |
 |------|------|
 | [SKILL.md](./.github/skills/redteam/SKILL.md) | AI Agent 完整工具文档 |
-| [redteam-server/README.md](./redteam-server/README.md) | 服务器部署指南 |
+| [.github/copilot-instructions.md](./.github/copilot-instructions.md) | 仓库级终端执行约束 |
 
 ---
 

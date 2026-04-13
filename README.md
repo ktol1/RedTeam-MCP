@@ -1,4 +1,4 @@
-# RedTeam-Agent
+﻿# RedTeam-Agent
 
 <div align="center">
 
@@ -13,31 +13,31 @@
 [![Skill](https://img.shields.io/badge/Workflow-Skill--First-brightgreen?style=for-the-badge)](./.github/skills/redteam/SKILL.md)
 [![Stars](https://img.shields.io/github/stars/ktol1/RedTeam-Agent?style=for-the-badge)](https://github.com/ktol1/RedTeam-Agent/stargazers)
 
-[English](./README.md) · [中文](./README_zh.md) · [Documentation](./.github/skills/redteam/SKILL.md) · [Quick Start](#-quick-start)
+[English](./README.md) 路 [涓枃](./README_zh.md) 路 [Documentation](./.github/skills/redteam/SKILL.md) 路 [Quick Start](#-quick-start)
 
 </div>
 
 ---
 
-## 🎯 Overview
+## 馃幆 Overview
 
 RedTeam-Agent is an AI-powered red team penetration testing framework now uses a **Skill-first terminal workflow**. AI reads the project skill, discovers tools, and executes commands directly in terminal to complete internal network penetration testing, Active Directory attacks, vulnerability exploitation, and other red team tasks.
 
 > **Core Philosophy**: No manual operation required. AI takes over all penetration tools for truly automated security testing.
 
-### ✨ Key Features
+### 鉁?Key Features
 
 | Feature | Description |
 |---------|-------------|
-| 🚀 **Plug & Play** | 15+ tools auto-install, one-click Windows deployment |
-| 🤖 **AI-Driven** | AI calls penetration tools directly via Skill + terminal |
-| 💰 **Token Optimized** | Smart output compression, saves 80% tokens |
-| 🛡️ **Full AD Coverage** | BloodHound + impacket + Responder full chain |
-| 🌐 **Multi-Client** | Cursor, Claude Desktop, VS Code Cline |
+| 馃殌 **Plug & Play** | 15+ tools auto-install, one-click Windows deployment |
+| 馃 **AI-Driven** | AI calls penetration tools directly via Skill + terminal |
+| 馃挵 **Token Optimized** | Smart output compression, saves 80% tokens |
+| 馃洝锔?**Full AD Coverage** | BloodHound + impacket + Responder full chain |
+| 馃寪 **Multi-Client** | Cursor, Claude Desktop, VS Code Cline |
 
 ---
 
-## 🛠️ Tool Matrix
+## 馃洜锔?Tool Matrix
 
 ### Network Scanning
 
@@ -54,7 +54,7 @@ RedTeam-Agent is an AI-powered red team penetration testing framework now uses a
 | [nuclei](./.github/skills/redteam/SKILL.md#tool-4-nuclei-vulnerability-poc-scanner) | POC batch scanning | Known vulnerability detection |
 | [ffuf](./.github/skills/redteam/SKILL.md#tool-5-ffuf-directory-fuzzing) | Directory fuzzing | Web directory brute force |
 
-### Active Directory Attacks 🏆
+### Active Directory Attacks 馃弳
 
 | Tool | Function | Use Case |
 |------|----------|----------|
@@ -84,9 +84,9 @@ RedTeam-Agent is an AI-powered red team penetration testing framework now uses a
 
 ---
 
-## 🚀 Quick Start
+## 馃殌 Quick Start
 
-### 1️⃣ Requirements
+### 1锔忊儯 Requirements
 
 ```
 Python 3.8+
@@ -94,12 +94,12 @@ Windows 10/11 or Linux/macOS
 8GB+ RAM (recommended)
 ```
 
-### 2️⃣ Installation
+### 2锔忊儯 Installation
 
 ```bash
 # Clone repository
 git clone https://github.com/ktol1/RedTeam-Agent.git
-cd RedTeam-Agent/redteam-server
+cd RedTeam-Agent
 
 # Create virtual environment
 python -m venv venv
@@ -110,173 +110,151 @@ python -m venv venv
 # Linux/macOS
 source venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
-
 # Download binary tools (auto-downloads gogo, fscan, httpx, nuclei, etc.)
-python install_tools.py
+python scripts/install_tools.py
 ```
 
-### 3️⃣ Configure MCP
+### 3锔忊儯 Enable Skills Terminal Mode
 
-#### Cursor IDE
+No extra server setup is required. Just do:
 
-Open `Settings` → `Features` → `MCP Servers` → `Add New Server`
+```bash
+# Enter repo root (ensure .github/skills/redteam/SKILL.md is visible)
+cd RedTeam-Agent
 
-```json
-{
-  "mcpServers": {
-    "RedTeam-Agent": {
-      "command": "D:\\RedTeam-Agent\\redteam-server\\venv\\Scripts\\python.exe",
-      "args": ["D:\\RedTeam-Agent\\redteam-server\\server.py"]
-    }
-  }
-}
+# Verify tools directory exists
+dir .\redteam-tools
 ```
 
-#### Claude Desktop
+AI will read the repository skill and `copilot-instructions.md`, then execute commands directly in terminal and parse outputs.
 
-Edit `%APPDATA%\Claude\claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "RedTeam-Agent": {
-      "command": "D:\\RedTeam-Agent\\redteam-server\\venv\\Scripts\\python.exe",
-      "args": ["D:\\RedTeam-Agent\\redteam-server\\server.py"]
-    }
-  }
-}
-```
-
-### 4️⃣ Start Using
+### 4锔忊儯 Start Using
 
 Tell your AI:
 
 ```
-🎯 Scan 192.168.1.0/24, find all Windows hosts and identify open services
+馃幆 First load the redteam skill, then scan 192.168.1.0/24 in terminal, write output to scan.txt, and summarize high-value findings
 
-🎯 Use SharpHound to collect corp.local domain info, analyze attack paths
+馃幆 Scan 192.168.1.0/24, find all Windows hosts and identify open services
 
-🎯 Set up chisel proxy on 192.168.1.100 to access 10.10.10.0/24 network
+馃幆 Use SharpHound to collect corp.local domain info, analyze attack paths
 
-🎯 Perform Kerberoasting attack on 192.168.1.50
+馃幆 Set up chisel proxy on 192.168.1.100 to access 10.10.10.0/24 network
+
+馃幆 Perform Kerberoasting attack on 192.168.1.50
 ```
 
 ---
 
-## 📊 Architecture
+## 馃搳 Architecture (Skills + Terminal)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│    ██████╗ ██████╗ ███████╗███╗   ███╗███████╗ ██████╗ ██╗    │
-│    ██╔══██╗██╔══██╗██╔════╝████╗ ████║██╔════╝██╔═══██╗██║    │
-│    ██████╔╝██████╔╝███████╗██╔████╔██║█████╗  ██║   ██║██║    │
-│    ██╔═══╝ ██╔══██╗╚════██║██║╚██╔╝██║██╔══╝  ██║   ██║╚═╝    │
-│    ██║     ██║  ██║███████║██║ ╚═╝ ██║███████╗╚██████╔╝██╗    │
-│    ╚═╝     ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝ ╚═════╝ ╚═╝    │
-│                                                                 │
-│                    Model Context Protocol                        │
-│                                                                 │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              │               │               │
-              ▼               ▼               ▼
-       ┌──────────┐   ┌──────────┐   ┌──────────┐
-       │  Cursor   │   │  Claude  │   │  Cline   │
-       │    IDE    │   │  Desktop │   │ (VS Code)│
-       └──────────┘   └──────────┘   └──────────┘
-              │               │               │
-              └───────────────┼───────────────┘
-                              │
-              ┌───────────────┴───────────────┐
-              │                               │
-              ▼                               ▼
-    ┌─────────────────────┐       ┌─────────────────────┐
-    │   MCP Server (Python)│       │   MCP Server (Node)│
-    │                     │       │                     │
-    │  ┌───────────────┐  │       │  ┌───────────────┐  │
-    │  │   server.py   │  │       │  │ @playwright/mcp│  │
-    │  │               │  │       │  │               │  │
-    │  │ 17+ Tools     │  │       │  │ Browser       │  │
-    │  │ Output Opt    │  │       │  │ Automation    │  │
-    │  └───────────────┘  │       │  └───────────────┘  │
-    └─────────────────────┘       └─────────────────────┘
-              │
-              ▼
-    ┌─────────────────────────────────────────────────────────────┐
-    │                     Tool Layer                              │
-    │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐  │
-    │  │  gogo  │ │  fscan  │ │  httpx  │ │ nuclei  │ │ Sharp  │  │
-    │  └────────┘ └────────┘ └────────┘ └────────┘ │Hound.exe│  │
-    │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ └────────┘  │
-    │  │ nxc    │ │ chisel  │ │impacket │ │responder│            │
-    │  └────────┘ └────────┘ └────────┘ └────────┘               │
-    └─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🎯 AD Attack Flow
-
-```
-     ┌─────────────────────────────────────────────────────────────────┐
-     │                      Attack Flow                                 │
-     └─────────────────────────────────────────────────────────────────┘
-
-  ┌───────────────┐      ┌───────────────┐      ┌───────────────┐
-  │    Recon      │ ───► │   Collection  │ ───► │   Analysis    │
-  └───────────────┘      └───────────────┘      └───────┬───────┘
-         │                                               │
-         ▼                                               ▼
-  ┌───────────────┐                            ┌───────────────┐
-  │ gogo/fscan    │                            │ BloodHound GUI│
-  │ kerbrute      │                            │ attack_paths  │
-  │ pywerview     │                            │ analysis.py  │
-  └───────────────┘                            └───────────────┘
-                                                        │
-  ┌───────────────┐      ┌───────────────┐            │
-  │    Attack     │ ◄─── │    Lateral    │ ◄─────────┘
-  └───────────────┘      └───────────────┘
-         │                       │
-         ▼                       ▼
-  ┌───────────────┐      ┌───────────────┐
-  │ Kerberoast    │      │ nxc smb       │
-  │ AS-REP Roast  │      │ wmiexec       │
-  │ secretsdump   │      │ psexec        │
-  │ ntlmrelayx    │      │ getST         │
-  └───────────────┘      └───────────────┘
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+鈹?                                                                鈹?
+鈹?   鈻堚枅鈻堚枅鈻堚枅鈺?鈻堚枅鈻堚枅鈻堚枅鈺?鈻堚枅鈻堚枅鈻堚枅鈻堚晽鈻堚枅鈻堚晽   鈻堚枅鈻堚晽鈻堚枅鈻堚枅鈻堚枅鈻堚晽 鈻堚枅鈻堚枅鈻堚枅鈺?鈻堚枅鈺?   鈹?
+鈹?   鈻堚枅鈺斺晲鈺愨枅鈻堚晽鈻堚枅鈺斺晲鈺愨枅鈻堚晽鈻堚枅鈺斺晲鈺愨晲鈺愨暆鈻堚枅鈻堚枅鈺?鈻堚枅鈻堚枅鈺戔枅鈻堚晹鈺愨晲鈺愨晲鈺濃枅鈻堚晹鈺愨晲鈺愨枅鈻堚晽鈻堚枅鈺?   鈹?
+鈹?   鈻堚枅鈻堚枅鈻堚枅鈺斺暆鈻堚枅鈻堚枅鈻堚枅鈺斺暆鈻堚枅鈻堚枅鈻堚枅鈻堚晽鈻堚枅鈺斺枅鈻堚枅鈻堚晹鈻堚枅鈺戔枅鈻堚枅鈻堚枅鈺? 鈻堚枅鈺?  鈻堚枅鈺戔枅鈻堚晳    鈹?
+鈹?   鈻堚枅鈺斺晲鈺愨晲鈺?鈻堚枅鈺斺晲鈺愨枅鈻堚晽鈺氣晲鈺愨晲鈺愨枅鈻堚晳鈻堚枅鈺戔暁鈻堚枅鈺斺暆鈻堚枅鈺戔枅鈻堚晹鈺愨晲鈺? 鈻堚枅鈺?  鈻堚枅鈺戔暁鈺愨暆    鈹?
+鈹?   鈻堚枅鈺?    鈻堚枅鈺? 鈻堚枅鈺戔枅鈻堚枅鈻堚枅鈻堚枅鈺戔枅鈻堚晳 鈺氣晲鈺?鈻堚枅鈺戔枅鈻堚枅鈻堚枅鈻堚枅鈺椻暁鈻堚枅鈻堚枅鈻堚枅鈺斺暆鈻堚枅鈺?   鈹?
+鈹?   鈺氣晲鈺?    鈺氣晲鈺? 鈺氣晲鈺濃暁鈺愨晲鈺愨晲鈺愨晲鈺濃暁鈺愨暆     鈺氣晲鈺濃暁鈺愨晲鈺愨晲鈺愨晲鈺?鈺氣晲鈺愨晲鈺愨晲鈺?鈺氣晲鈺?   鈹?
+鈹?                                                                鈹?
+鈹?                Skill-first Terminal Execution                   鈹?
+鈹?                                                                鈹?
+鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+                              鈹?
+              鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+              鈹?              鈹?              鈹?
+              鈻?              鈻?              鈻?
+       鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+       鈹? Cursor   鈹?  鈹? Claude  鈹?  鈹? Cline   鈹?
+       鈹?   IDE    鈹?  鈹? Desktop 鈹?  鈹?(VS Code)鈹?
+       鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+              鈹?              鈹?              鈹?
+              鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+                              鈹?
+              鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹粹攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+              鈹?                              鈹?
+              鈻?                              鈻?
+    鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+    鈹?                      Skill Layer                           鈹?
+    鈹?                                                            鈹?
+    鈹? .github/copilot-instructions.md                            鈹?
+    鈹? .github/skills/redteam/SKILL.md                            鈹?
+    鈹?                                                            鈹?
+    鈹? Rules: non-interactive commands / file-first long output   鈹?
+    鈹?        summarize only high-signal findings                 鈹?
+    鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+              鈹?
+              鈻?
+    鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+    鈹?                    Tool Layer                              鈹?
+    鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹?
+    鈹? 鈹? gogo  鈹?鈹? fscan  鈹?鈹? httpx  鈹?鈹?nuclei  鈹?鈹?Sharp  鈹? 鈹?
+    鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹侶ound.exe鈹? 鈹?
+    鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹?
+    鈹? 鈹?nxc    鈹?鈹?chisel  鈹?鈹俰mpacket 鈹?鈹俽esponder鈹?           鈹?
+    鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?              鈹?
+    鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
 ```
 
 ---
 
-## 📦 MCP Tools
+## 馃幆 AD Attack Flow
+
+```
+     鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+     鈹?                     Attack Flow                                 鈹?
+     鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+
+  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+  鈹?   Recon      鈹?鈹€鈹€鈹€鈻?鈹?  Collection  鈹?鈹€鈹€鈹€鈻?鈹?  Analysis    鈹?
+  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+         鈹?                                              鈹?
+         鈻?                                              鈻?
+  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?                           鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+  鈹?gogo/fscan    鈹?                           鈹?BloodHound GUI鈹?
+  鈹?kerbrute      鈹?                           鈹?attack_paths  鈹?
+  鈹?pywerview     鈹?                           鈹?analysis.py  鈹?
+  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?                           鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+                                                        鈹?
+  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?           鈹?
+  鈹?   Attack     鈹?鈼勨攢鈹€鈹€ 鈹?   Lateral    鈹?鈼勨攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+         鈹?                      鈹?
+         鈻?                      鈻?
+  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+  鈹?Kerberoast    鈹?     鈹?nxc smb       鈹?
+  鈹?AS-REP Roast  鈹?     鈹?wmiexec       鈹?
+  鈹?secretsdump   鈹?     鈹?psexec        鈹?
+  鈹?ntlmrelayx    鈹?     鈹?getST         鈹?
+  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?     鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+```
+
+---
+
+## 馃摝 Terminal Commands (Skill-driven)
 
 | # | Tool | Function | Command |
 |---|------|----------|---------|
-| 1 | `invoke_gogo` | Fast asset probe | `gogo -t 100 -iL hosts.txt` |
-| 2 | `invoke_fscan` | Network scanner | `fscan -hf hosts.txt` |
-| 3 | `invoke_httpx` | Web fingerprinting | `httpx -l urls.txt -title` |
-| 4 | `invoke_nuclei` | POC scanner | `nuclei -l urls.txt -t vulnerabilities/` |
-| 5 | `invoke_ffuf` | Directory fuzzing | `ffuf -w wordlist.txt -u URL/FUZZ` |
-| 6 | `invoke_nxc` | Lateral movement | `nxc smb 192.168.1.0/24 -u user -p pass` |
-| 7 | `invoke_kerbrute` | Kerberos enum | `kerbrute userenum -d domain users.txt` |
-| 8 | `invoke_bloodhound_analysis` | BloodHound analysis | Parse JSON to attack report |
-| 9 | `invoke_powerview` | Domain enum | `pywerview get-domain-user` |
-| 10 | `invoke_ldapdomaindump` | LDAP dump | `ldapdomaindump ldap://dc` |
-| 11 | `invoke_responder` | LLMNR spoofing | `responder -I eth0` |
-| 12 | `invoke_proxy_setup` | Proxy setup | chisel/nc/powershell |
-| 13 | `invoke_playwright` | Browser automation | screenshot/form/scraping |
-| 14 | `invoke_wmiexec` | WMI execution | impacket-wmiexec |
-| 15 | `invoke_psexec` | PSEXEC | impacket-psexec |
-| 16 | `invoke_secretsdump` | LSASS Dump | impacket-secretsdump |
-| 17 | `invoke_ntlmrelayx` | NTLM Relay | impacket-ntlmrelayx |
+| 1 | `gogo` | Fast asset probe | `gogo -t 100 -l hosts.txt -q -f gogo.txt` |
+| 2 | `fscan` | Network scanner | `fscan -h 192.168.1.0/24 -np -silent -nocolor -o fscan.txt` |
+| 3 | `httpx` | Web fingerprinting | `httpx -l urls.txt -sc -title -server -td -silent -o httpx.txt` |
+| 4 | `nuclei` | POC scanner | `nuclei -l urls.txt -tags cve,rce -s high,critical -nc -o nuclei.txt` |
+| 5 | `ffuf` | Directory fuzzing | `ffuf -u http://target/FUZZ -w wordlist.txt -mc 200,301,302 -s -o ffuf.txt` |
+| 6 | `nxc` | Lateral movement | `nxc smb 192.168.1.0/24 -u user -p pass --shares` |
+| 7 | `kerbrute` | Kerberos enum | `kerbrute userenum -d corp.local --dc 192.168.1.10 users.txt -o valid_users.txt` |
+| 8 | `SharpHound` | BloodHound collection | `SharpHound.exe -c Default -d corp.local` |
+| 9 | `pywerview` | Domain enumeration | `pywerview.py get-domain-user -d corp.local --dc-ip 192.168.1.10 -u user -p pass` |
+| 10 | `ldapdomaindump` | LDAP dump | `ldapdomaindump ldap://192.168.1.10 -u 'corp\\user' -p 'password' -o .\\ldapdump` |
+| 11 | `responder` | LLMNR spoofing | `responder -I eth0 -v` |
+| 12 | `wmiexec` | WMI execution | `impacket-wmiexec domain/user:pass@target 'whoami'` |
+| 13 | `psexec` | PSEXEC | `impacket-psexec domain/user:pass@target cmd.exe` |
+| 14 | `secretsdump` | LSASS dump | `impacket-secretsdump corp.local/user:pass@dc -just-dc` |
+| 15 | `ntlmrelayx` | NTLM relay | `impacket-ntlmrelayx -t ldap://dc --smb2support` |
 
 ---
 
-## ⚡ Token Optimization
+## 鈿?Token Optimization
 
 | Optimization | Description | Savings |
 |-------------|-------------|---------|
@@ -288,16 +266,16 @@ Tell your AI:
 
 ---
 
-## 📚 Documentation
+## 馃摎 Documentation
 
 | Document | Description |
 |----------|-------------|
 | [SKILL.md](./.github/skills/redteam/SKILL.md) | Complete tool docs for AI agents |
-| [redteam-server/README.md](./redteam-server/README.md) | Server deployment guide |
+| [.github/copilot-instructions.md](./.github/copilot-instructions.md) | Repository terminal execution rules |
 
 ---
 
-## 🤝 Contributing
+## 馃 Contributing
 
 Issues and Pull Requests welcome!
 
@@ -308,8 +286,9 @@ Issues and Pull Requests welcome!
 
 <div align="center">
 
-**MIT License** · Copyright © 2024-2026 **ktol1**
+**MIT License** 路 Copyright 漏 2024-2026 **ktol1**
 
-**If you find this useful, give it a ⭐ Star!**
+**If you find this useful, give it a 猸?Star!**
 
 </div>
+

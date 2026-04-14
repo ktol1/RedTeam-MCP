@@ -17,7 +17,7 @@ import subprocess
 
 # 工具存放目录（相对于脚本位置）
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TOOLS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "redteam-tools")
+TOOLS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "tools")
 
 # Go 编译的核心工具列表与 GitHub 仓库
 TOOLS_LIST = {
@@ -255,3 +255,4 @@ if __name__ == "__main__":
     print(f'    echo \'export PATH="{TOOLS_DIR}:$PATH"\' >> ~/.bashrc')
     print(f"    source ~/.bashrc")
     print("=" * 50)
+

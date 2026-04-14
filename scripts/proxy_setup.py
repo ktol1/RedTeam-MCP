@@ -30,7 +30,7 @@ class ProxySetup:
     """代理搭建工具"""
 
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    TOOLS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "redteam-tools")
+    TOOLS_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "tools")
 
     def __init__(self):
         self.tools = {
@@ -354,3 +354,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

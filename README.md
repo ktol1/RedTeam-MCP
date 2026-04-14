@@ -93,7 +93,7 @@ No extra server setup is required.
 
 ```bash
 cd RedTeam-Agent
-dir .\redteam-tools
+dir .\tools
 ```
 
 AI will read the repository skill and `.github/copilot-instructions.md`, then execute terminal commands directly.
@@ -167,3 +167,4 @@ Issues and pull requests are welcome.
 MIT License - Copyright (c) 2024-2026 ktol1
 
 </div>
+

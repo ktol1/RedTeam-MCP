@@ -1,11 +1,11 @@
-﻿# Repository Instructions
+# Repository Instructions
 
 This repository uses Skill-first terminal workflows.
 
 ## Preferred execution model
 
 - Do not use wrapper scripts; execute tools directly in terminal.
-- Prefer direct terminal execution of binaries in `.\redteam-tools`.
+- Prefer direct terminal execution of binaries in `.\tools`.
 - Load and follow the `redteam` skill before launching red-team commands.
 
 ## Terminal execution contract
@@ -17,7 +17,7 @@ This repository uses Skill-first terminal workflows.
 
 ## Tool location
 
-- Primary directory: `.\redteam-tools`
+- Primary directory: `.\tools`
 - Use absolute paths when command resolution fails.
 
 ## Output discipline
@@ -28,5 +28,6 @@ This repository uses Skill-first terminal workflows.
 ## Safety and reliability
 
 - Use non-interactive command forms.
-- If arguments are uncertain, read local help files in `.\redteam-tools\*_help.txt` before retrying.
+- If arguments are uncertain, read local help files in `.\tools\*_help.txt` before retrying.
+
 

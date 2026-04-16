@@ -31,7 +31,11 @@ PYTHON_PACKAGES = [
     "netexec",
     "pywerview",
     "ldapdomaindump",
+    "bloodyAD",
 ]
+
+IMPACKET_REPO = "https://github.com/fortra/impacket.git"
+DNSTOOL_URL = "https://raw.githubusercontent.com/dirkjanm/krbrelayx/master/dnstool.py"
 
 SKIP_SUFFIX = (
     ".txt",
@@ -197,6 +201,42 @@ def install_python_packages():
             print(f"[!] {pkg} 安装失败: {result.stderr.strip()}")
 
 
+def ensure_impacket_scripts_dir():
+    impacket_dir = os.path.join(TOOLS_DIR, "impacket")
+    if os.path.isdir(impacket_dir):
+        print(f"[*] 已存在本地 impacket 脚本目录: {impacket_dir}")
+        return
+
+    print(f"[*] 拉取 impacket 脚本目录到 {impacket_dir}")
+    result = subprocess.run(
+        ["git", "clone", "--depth", "1", IMPACKET_REPO, impacket_dir],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        print("[+] impacket 脚本目录准备完成")
+    else:
+        print(f"[!] impacket 脚本目录拉取失败: {result.stderr.strip()}")
+
+
+def ensure_dnstool_script():
+    dnstool_path = os.path.join(TOOLS_DIR, "dnstool.py")
+    if os.path.exists(dnstool_path):
+        print(f"[*] 已存在 dnstool.py: {dnstool_path}")
+        return
+
+    print(f"[*] 下载 dnstool.py 到 {dnstool_path}")
+    try:
+        req = urllib.request.Request(DNSTOOL_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=60) as response, open(dnstool_path, "wb") as out_file:
+            shutil.copyfileobj(response, out_file)
+        mode = os.stat(dnstool_path).st_mode
+        os.chmod(dnstool_path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        print("[+] dnstool.py 下载完成")
+    except Exception as exc:
+        print(f"[!] dnstool.py 下载失败: {exc}")
+
+
 def print_path_hint():
     print("\n[*] 建议将 tools 目录加入 PATH")
     print(f'    echo \'export PATH="{TOOLS_DIR}:$PATH"\' >> ~/.bashrc')
@@ -219,11 +259,14 @@ def main():
         download_tool(tool_name, repo)
 
     install_python_packages()
+    ensure_impacket_scripts_dir()
+    ensure_dnstool_script()
 
     print("\n" + "=" * 50)
     print("[+] 安装流程完成")
     print(f"    二进制目录: {TOOLS_DIR}")
-    print("    Python 工具: impacket-* / nxc / bloodhound-python / pywerview / ldapdomaindump")
+    print("    Python 工具: impacket-* / nxc / bloodhound-python / pywerview / ldapdomaindump / bloodyAD")
+    print("    额外脚本: ./tools/impacket/* 与 ./tools/dnstool.py")
     print("=" * 50)
     print_path_hint()
 

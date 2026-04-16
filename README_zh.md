@@ -111,7 +111,11 @@ python -m venv venv
 source venv/bin/activate
 
 # 下载二进制工具 (自动下载 gogo, fscan, httpx, nuclei 等)
+# Windows
 python scripts/install_tools.py
+
+# Linux/macOS
+python scripts/install_tools_linux.py
 ```
 
 ### 3️⃣ 启用 Skills 终端模式

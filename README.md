@@ -84,7 +84,11 @@ python -m venv venv
 # Linux/macOS
 source venv/bin/activate
 
+# Windows
 python scripts/install_tools.py
+
+# Linux/macOS
+python scripts/install_tools_linux.py
 ```
 
 ### 3. Enable Skills Terminal Mode

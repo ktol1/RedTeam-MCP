@@ -13,7 +13,7 @@
 [![Skill](https://img.shields.io/badge/Workflow-Skill--First-brightgreen?style=for-the-badge)](./.github/skills/redteam/SKILL.md)
 [![Stars](https://img.shields.io/github/stars/ktol1/RedTeam-Agent?style=for-the-badge)](https://github.com/ktol1/RedTeam-Agent/stargazers)
 
-[English](./README.md) | [Chinese](./README_zh.md) | [Documentation](./.github/skills/redteam/SKILL.md) | [Quick Start](#quick-start)
+[English](./README.md) | [简体中文](./README_zh.md) | [Documentation](./.github/skills/redteam/SKILL.md) | [Quick Start](#quick-start)
 
 </div>
 

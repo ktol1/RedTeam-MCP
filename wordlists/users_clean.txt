@@ -1,3 +1,0 @@
-administrator
-j.sparrow
-dc01
